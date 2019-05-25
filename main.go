@@ -97,7 +97,7 @@ func main() {
 	http.HandleFunc("/logout", controllers.Logout)
 	http.HandleFunc("/tweetData", getTweetData)
 
-	err := http.ListenAndServe(":80", nil)
+	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Println("Server listen error:", err)
 	}
