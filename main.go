@@ -158,8 +158,8 @@ func getTweetData(w http.ResponseWriter, req *http.Request) {
 
 	//w.Write([]byte(`{ "User details":"` + info[0].User.ScreenName + `" }`))
 	count := 0
-	for i := 0; i < 4; i++ {
-		count += info[i].FavoriteCount
+	for _, v := range info {
+		count += v.FavoriteCount
 	}
 	w.Write([]byte(`{ "Tweets like count":"` + string(count) + `" }`))
 
