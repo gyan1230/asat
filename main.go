@@ -1,10 +1,7 @@
 package main
 
 import (
-	"compress/gzip"
 	"encoding/json"
-	"fmt"
-	"io"
 	"log"
 	"net/http"
 
@@ -95,7 +92,7 @@ func main() {
 	http.HandleFunc("/admin", controllers.ShowAll)
 	http.HandleFunc("/login", controllers.Login)
 	http.HandleFunc("/logout", controllers.Logout)
-	http.HandleFunc("/tweetData", getTweetData)
+	http.HandleFunc("/tweetData", controllers.GetTweetData)
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
@@ -108,62 +105,4 @@ func index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 	log.Println("In index:::::::::::::::")
 	json.NewEncoder(w).Encode("In Index:::")
-}
-
-func getTweetData(w http.ResponseWriter, req *http.Request) {
-	url := "https://api.twitter.com/1.1/statuses/user_timeline.json?user_id=3120243180&screen_name=vikramsparamesh"
-
-	req, _ = http.NewRequest("GET", url, nil)
-
-	req.Header.Add("Authorization", "Bearer AAAAAAAAAAAAAAAAAAAAABlA%2BgAAAAAAMWkicp39DkIQkGSe0nQrCmOJMNg%3Dm9bcjqeL4jlC2PVL9K0qz8gGr3jNXjnUidbxbCKuej9j0hDDtD")
-	req.Header.Add("User-Agent", "PostmanRuntime/7.13.0")
-	req.Header.Add("Accept", "*/*")
-	req.Header.Add("Cache-Control", "no-cache")
-	//	req.Header.Add("Postman-Token", "e55120bb-292b-4cc4-8b01-5e5181230ce2,51e598a2-07ae-41b7-acbd-5302fec2fb1c")
-	req.Header.Add("Host", "api.twitter.com")
-	req.Header.Add("cookie", "personalization_id=v1_tf1dDIphNvn4tBs3u8LUkA==")
-	req.Header.Add("cookie", "guest_id=v1%3A155854116672032548")
-	req.Header.Add("accept-encoding", "gzip, deflate")
-	req.Header.Add("Connection", "keep-alive")
-	req.Header.Add("cache-control", "no-cache")
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatalln("error in response fetch", err)
-	}
-	defer res.Body.Close()
-
-	// Check that the server actually sent compressed data
-	var reader io.ReadCloser
-	switch res.Header.Get("Content-Encoding") {
-	case "gzip":
-		reader, err = gzip.NewReader(res.Body)
-		defer reader.Close()
-	default:
-		reader = res.Body
-	}
-
-	var info []Information
-	w.Header().Set("content-type", "application/json")
-	err = json.NewDecoder(reader).Decode(&info)
-	if err != nil {
-		log.Printf("error decoding response: %v", err)
-		if e, ok := err.(*json.SyntaxError); ok {
-			log.Printf("syntax error at byte offset %d", e.Offset)
-		}
-
-	}
-
-	//	w.Write([]byte(`{ "message": "` + err.Error() + `" }`))
-
-	//w.Write([]byte(`{ "User details":"` + info[0].User.ScreenName + `" }`))
-	count := 0
-	for _, v := range info {
-		count += v.FavoriteCount
-	}
-	w.Write([]byte(`{ "Tweets like count":"` + string(count) + `" }`))
-
-	fmt.Println("User screen name", info[0].User.ScreenName)
-	fmt.Println("count", count)
-	//	fmt.Println("info is", info)
 }
