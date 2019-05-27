@@ -1,0 +1,6 @@
+version: "2"
+services:
+  asat:
+    image: asat:local
+    ports:
+      - "80:8080"
