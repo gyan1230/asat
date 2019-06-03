@@ -206,8 +206,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	tmp := struct {
 		Email    string `json:"email"`
-		Password string `json:"password"`
-	}{u.Email, u.Fullname}
+		Fullname string `json:"fullname"`
+	}{
+		Email:    u.Email,
+		Fullname: u.Fullname,
+	}
 
 	res := Resp{Data: tmp}
 
@@ -294,5 +297,4 @@ func GetTweetData(w http.ResponseWriter, req *http.Request) {
 
 	log.Println("User screen name", info[0].User.ScreenName)
 	log.Println("Tweets like count:", count)
-	//	fmt.Println("info is", info)
 }
