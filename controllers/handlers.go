@@ -146,7 +146,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if alreadyLoggedIn(w, r) {
+	if AlreadyLoggedIn(w, r) {
 		log.Println("Already login return to home...")
 		w.Header().Set("content-type", "application/json")
 		json.NewEncoder(w).Encode("Already login return to home.")
@@ -219,7 +219,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 //Logout ...
 func Logout(w http.ResponseWriter, r *http.Request) {
-	if !alreadyLoggedIn(w, r) {
+	if !AlreadyLoggedIn(w, r) {
 		log.Println("Return to index :::")
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
@@ -236,22 +236,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, c)
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
-}
-
-func alreadyLoggedIn(w http.ResponseWriter, r *http.Request) bool {
-	c, err := r.Cookie("token")
-	if err != nil {
-		log.Println("No cookie found.")
-		return false
-	}
-	log.Println("cookie found :::")
-	expirationTime := time.Now().Add(20 * time.Second)
-	//get value if user is valid
-	// refresh session
-	c.Expires = expirationTime
-	http.SetCookie(w, c)
-	log.Println("Refresh cookie:::")
-	return true
 }
 
 //GetTweetData :

@@ -148,3 +148,20 @@ func DeleteUser(r *http.Request) error {
 	return nil
 }
 */
+
+//AlreadyLoggedIn :
+func AlreadyLoggedIn(w http.ResponseWriter, r *http.Request) bool {
+	c, err := r.Cookie("token")
+	if err != nil {
+		log.Println("No cookie found.")
+		return false
+	}
+	log.Println("cookie found :::")
+	expirationTime := time.Now().Add(20 * time.Second)
+	//get value if user is valid
+	// refresh session
+	c.Expires = expirationTime
+	http.SetCookie(w, c)
+	log.Println("Refresh cookie:::")
+	return true
+}
