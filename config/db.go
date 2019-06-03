@@ -3,7 +3,6 @@ package config
 import (
 	"context"
 	"log"
-	"os"
 
 	//	_ "github.com/lib/pq"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,20 +13,20 @@ import (
 var Client *mongo.Client
 
 const (
-	local = "localhost"
+	local = "mongodb://localhost:27017"
 )
 
 func init() {
 	// get a mongo sessions
-	mongoURL := os.Getenv("mongo_uri")
-	c, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoURL))
+	//mongoURL := os.Getenv("mongo_uri")
+	c, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(local))
 	if err != nil {
 		log.Fatal("Error in connecting DB ", err)
 	}
 	if err := c.Ping(context.TODO(), nil); err != nil {
 		log.Fatal("Error in pinging DB", err)
 	}
-	log.Println("coneected to DB:::::::")
+	log.Println("connected to DB:::::::")
 	Client = c
 	return
 

@@ -21,6 +21,12 @@ type User struct {
 	Fullname string             `json:"fullname,omitempty" bson:"fullname,omitempty"`
 }
 
+//Credential :
+type Credential struct {
+	Email    string `json:"email,omitempty" bson:"email,omitempty"`
+	Password string `json:"password,omitempty" bson:"password,omitempty"`
+}
+
 //Claims ...
 type Claims struct {
 	Username string `json:"username"`

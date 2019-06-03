@@ -147,15 +147,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if alreadyLoggedIn(w, r) {
-		log.Println("Already login return to index...")
+		log.Println("Already login return to home...")
 		w.Header().Set("content-type", "application/json")
-
+		json.NewEncoder(w).Encode("Already login return to home.")
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
 	// is there a Email?
-	var person User
+	var person Credential
 	_ = json.NewDecoder(r.Body).Decode(&person)
 	u, err := GetUser(r.Context(), person.Email) // return user (if present), nil in u,err OR nil,err (if not present user) in u,err
 	if u == nil {
@@ -175,7 +175,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// Declare the expiration time of the token
 	// here, we have kept it as 5 minutes
-	expirationTime := time.Now().Add(5 * time.Minute)
+	expirationTime := time.Now().Add(15 * time.Second)
 	// Create the JWT claims, which includes the username and expiry time
 	claims := &Claims{
 		Username: u.Email,
@@ -200,12 +200,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		Expires: expirationTime,
 	}
 	// c.MaxAge = sessionLength
-	fmt.Println("login cookie :", c.Value)
-	http.SetCookie(w, c)
 
-	// r := models.Resp{Data: u}
+	http.SetCookie(w, c)
+	fmt.Println("login cookie set ::::")
+
+	tmp := struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}{u.Email, u.Fullname}
+
+	res := Resp{Data: tmp}
+
 	w.Header().Set("content-type", "application/json")
-	json.NewEncoder(w).Encode(u)
+	json.NewEncoder(w).Encode(res)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 	return
 }
@@ -234,17 +241,16 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 func alreadyLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	c, err := r.Cookie("token")
 	if err != nil {
+		log.Println("No cookie found.")
 		return false
 	}
-	expirationTime := time.Now().Add(5 * time.Minute)
+	log.Println("cookie found :::")
+	expirationTime := time.Now().Add(20 * time.Second)
 	//get value if user is valid
-	//fgf
-	s := c.Value
-	c.Value = s
-
 	// refresh session
 	c.Expires = expirationTime
 	http.SetCookie(w, c)
+	log.Println("Refresh cookie:::")
 	return true
 }
 
@@ -303,6 +309,6 @@ func GetTweetData(w http.ResponseWriter, req *http.Request) {
 	w.Write([]byte(`{ "Tweets like count":"` + string(count) + `" }`))
 
 	log.Println("User screen name", info[0].User.ScreenName)
-	log.Println("count", count)
+	log.Println("Tweets like count:", count)
 	//	fmt.Println("info is", info)
 }
