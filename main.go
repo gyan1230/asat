@@ -16,6 +16,8 @@ func main() {
 	http.HandleFunc("/login", controllers.Login)
 	http.HandleFunc("/logout", controllers.Logout)
 	http.HandleFunc("/tweetData", controllers.GetTweetData)
+	http.HandleFunc("/data", controllers.DisplayAllPowerData)
+	http.HandleFunc("/storeData", controllers.StoreEnergyData)
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {

@@ -92,6 +92,47 @@ type Information struct {
 	Lang          string      `json:"lang"`
 }
 
+//PowerDataStr :
+type PowerDataStr struct {
+	IndexName    string    `json:"index_name"` // `json:"index_name,omitempty" bson:"index_name,omitempty"`
+	Title        string    `json:"title"`
+	Desc         string    `json:"desc"`
+	Created      int       `json:"created"`
+	Updated      int       `json:"updated"`
+	CreatedDate  time.Time `json:"created_date"`
+	UpdatedDate  time.Time `json:"updated_date"`
+	Active       string    `json:"active"`
+	Visualizable string    `json:"visualizable"`
+	CatalogUUID  string    `json:"catalog_uuid"`
+	Source       string    `json:"source"`
+	OrgType      string    `json:"org_type"`
+	Org          []string  `json:"org"`
+	Sector       []string  `json:"sector"`
+	Field        []struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+		Type string `json:"type"`
+	} `json:"field"`
+	Status  string `json:"status"`
+	Message string `json:"message"`
+	Total   int    `json:"total"`
+	Count   int    `json:"count"`
+	Limit   string `json:"limit"`
+	Offset  string `json:"offset"`
+	Records []struct {
+		StateSystemRegion                    string `json:"state_system_region"`
+		October2018PeakDemandMw              string `json:"october_2018_peak_demand__mw_"`
+		October2018PeakMetMw                 string `json:"october_2018_peak_met__mw_"`
+		October2018SurplusDeficitMw          string `json:"october_2018_surplus_deficit_____mw_"`
+		October2018SurplusDeficit            string `json:"october_2018_surplus_deficit_____"`
+		April2018October2018PeakDemandMw     string `json:"april_2018_october_2018_peak_demand__mw_"`
+		April2018October2018PeakMetMw        string `json:"april_2018_october_2018_peak_met__mw_"`
+		April2018October2018SurplusDeficitMw string `json:"april_2018_october_2018_surplus_deficit_____mw_"`
+		April2018October2018SurplusDeficit   string `json:"april_2018_october_2018_surplus_deficit_____"`
+	} `json:"records"`
+	Version string `json:"version"`
+}
+
 var jwtKey = []byte("my_secret_key")
 
 //ShowAll :
@@ -297,4 +338,88 @@ func GetTweetData(w http.ResponseWriter, req *http.Request) {
 
 	log.Println("User screen name", info[0].User.ScreenName)
 	log.Println("Tweets like count:", count)
+}
+
+//DisplayAllPowerData :
+func DisplayAllPowerData(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)
+		return
+	}
+
+	url := "https://api.data.gov.in/resource/1f023275-e8a1-4dc9-a014-4eed45403154?api-key=579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b&format=json&offset=0&limit=10"
+
+	req, _ := http.NewRequest("GET", url, nil)
+
+	req.Header.Add("cache-control", "no-cache")
+	//	req.Header.Add("Postman-Token", "064f3b39-db1d-4c70-9f9e-3512529a6d9c")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Println("Response error:", err)
+	}
+
+	defer res.Body.Close()
+	//body, _ := ioutil.ReadAll(res.Body)
+
+	//	fmt.Println(res)
+	//	fmt.Println(string(body))
+
+	var data PowerDataStr
+	err = json.NewDecoder(res.Body).Decode(&data)
+	if err != nil {
+		log.Printf("error decoding response: %v", err)
+		if e, ok := err.(*json.SyntaxError); ok {
+			log.Printf("syntax error at byte offset %d", e.Offset)
+		}
+
+	}
+	log.Println("Data displayed:::", data.Title)
+	w.Header().Set("content-type", "application/json")
+	json.NewEncoder(w).Encode(data)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+	return
+
+}
+
+//StoreEnergyData :
+func StoreEnergyData(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)
+		return
+	}
+
+	url := "https://api.data.gov.in/resource/1f023275-e8a1-4dc9-a014-4eed45403154?api-key=579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b&format=json&offset=0&limit=10"
+
+	req, _ := http.NewRequest("GET", url, nil)
+
+	req.Header.Add("cache-control", "no-cache")
+	//	req.Header.Add("Postman-Token", "064f3b39-db1d-4c70-9f9e-3512529a6d9c")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Println("Response error:", err)
+	}
+
+	defer res.Body.Close()
+
+	var allData PowerDataStr
+
+	err = json.NewDecoder(res.Body).Decode(&allData)
+
+	if err != nil {
+		log.Printf("error decoding response: %v", err)
+		if e, ok := err.(*json.SyntaxError); ok {
+			log.Printf("syntax error at byte offset %d", e.Offset)
+		}
+
+	}
+
+	collection := config.Client.Database("power").Collection("data")
+	insert, err := collection.InsertOne(r.Context(), allData)
+	if err != nil {
+		log.Println("Error in inserting power data ::::", err)
+	}
+	log.Println("Inserted document:::", insert)
+
 }
