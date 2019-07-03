@@ -12,6 +12,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gyan1230/asat/config"
 	"golang.org/x/crypto/bcrypt"
+	"gopkg.in/mikespook/gorbac.v2"
 )
 
 //Information :
@@ -422,4 +423,59 @@ func StoreEnergyData(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println("Inserted document:::", insert)
 
+}
+
+//Role :
+func Role(w http.ResponseWriter, r *http.Request) {
+	rbac := gorbac.New()
+
+	r1 := newMyRole("role-1")
+	r2 := newMyRole("role-2")
+
+	if err := rbac.Add(r1); err != nil {
+		fmt.Printf("Add Error: %s", err)
+		return
+	}
+
+	if err := rbac.Add(r2); err != nil {
+		fmt.Printf("Add Error: %s", err)
+		return
+	}
+
+	if err := rbac.SetParents("role-1", []string{"role-2"}); err != nil {
+		fmt.Printf("SetParents Error: %s", err)
+		return
+	}
+
+	role, parents, err := rbac.Get("role-1")
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		return
+	}
+	if myRole, ok := role.(*myRole); ok {
+		fmt.Printf("Name:\t%s\nLabel:\t%s\nDesc:\t%s\nParents:\t%s\n",
+			myRole.ID(), myRole.Label, myRole.Description, parents)
+	}
+}
+
+type myRole struct {
+	*gorbac.StdRole
+	Label       string
+	Description string
+}
+
+func loadByName(name string) (label, description string) {
+	// loading data from storages or somewhere
+	return name + " for testing", "This is the description for " + name
+}
+
+func newMyRole(name string) gorbac.Role {
+	// loading extra properties by `name`.
+	label, desc := loadByName(name)
+	role := &myRole{
+		Label:       label,
+		Description: desc,
+	}
+	role.StdRole = gorbac.NewStdRole(name)
+	return role
 }
